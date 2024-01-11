@@ -1,0 +1,343 @@
+Scenario:
+A customer, who owns a small food chain, is planning to expand their business and is seeking the expertise of our data analysis team. They have approached us to investigate the most suitable city for opening their next restaurant. Additionally, they require an analysis of key considerations related to the competitive landscape in the chosen area.
+         
+        -------------------------------
+
+
+1. Assessing Business Stability:
+Our foremost task is to evaluate the closing ratio of businesses in the cities under consideration. This crucial metric will provide us with insights into the economic stability of the regions we are exploring.
+
+2. Benchmarking Against Averages:
+To gain a comprehensive perspective, we will compare the closing ratios of businesses in each city to the average closing ratio. This comparative analysis will help us identify cities with favorable conditions for new ventures.
+
+3. Saturation Levels Analysis:
+We are committed to understanding the market saturation within the restaurant industry in specific cities. By comparing the saturation levels with the average food-related business ratio, we will identify areas where there may be room for newcomers.
+
+4. Identifying Ideal Cities:
+Our ideal cities will be those that excel in each of the above criteria. The combination of stability, favorable ratios, and untapped market potential will guide our selection process.
+
+5. Public Acclaim Analysis:
+In addition to quantitative data, we will conduct a qualitative analysis by examining customer reviews. Understanding the public acclaim and reputation of businesses is integral to our decision-making process.
+                           
+                  
+   
+
+ The finished dataset is in the following section along with the code it was used.   
+         
+
+	---------------------------
+
+
+
+To check how many food-related businesses exist, I will use the following query.
+
+
+SELECT COUNT(business_id) AS number_of_businesses, category
+FROM category
+GROUP BY category
+HAVING category LIKE '%Food%'
+    OR category LIKE '%Restaurants%'
+    OR category LIKE '%Pizza%'
+    OR category LIKE '%Pasta%'
+    OR category LIKE '%French%'
+    OR category LIKE '%Greek%'
+    OR category LIKE '%Turkish%'
+    OR category LIKE '%Sushi%'
+    OR category LIKE '%Italian%'
+    OR category LIKE '%Cuisine%'
+    OR category LIKE '%Kebap%'
+    OR category LIKE '%Fish%'
+    OR category LIKE '%Burger%'
+ORDER BY number_of_businesses DESC
+
+-------------------------------------------
+
+
+This is where I will use a `CASE` statement. First, we need to check how many businesses are related to the food industry compared to the total number of businesses in our database.
+
+
+SELECT 
+    SUM(CASE
+        WHEN category LIKE '%Food%' THEN 1
+        WHEN category LIKE '%Restaurants%' THEN 1
+        WHEN category LIKE '%Pizza%' THEN 1
+        WHEN category LIKE '%Pasta%' THEN 1
+        WHEN category LIKE '%French%' THEN 1
+        WHEN category LIKE '%Greek%' THEN 1
+        WHEN category LIKE '%Turkish%' THEN 1
+        WHEN category LIKE '%Sushi%' THEN 1
+        WHEN category LIKE '%Italian%' THEN 1
+        WHEN category LIKE '%Cuisine%' THEN 1
+        WHEN category LIKE '%Kebap%' THEN 1
+        WHEN category LIKE '%Fish%' THEN 1
+        WHEN category LIKE '%Burger%' THEN 1
+        ELSE 0
+    END) AS food_related_business,
+    COUNT(business_id) AS total_business_count
+FROM category
+
+
++-----------------------+----------------------+
+| food_related_business | total_business_count |
++-----------------------+----------------------+
+|                  1872 |                10000 |
++-----------------------+----------------------+
+
+
+So, we need to determine the percentage of these food-related businesses. As we can see, almost 19% of the total businesses in general are related to food.
+
+
+-------------------------------------------
+
+
+
+
+We proceed by searching for the number of opened and closed businesses in these cities so we can make comparisons.
+
+
+
+-  Open Businesses
+
+
+SELECT
+    state,    
+    city,
+    COUNT(is_open) AS openned_businesses
+FROM business
+WHERE is_open = 1
+GROUP BY  city
+ORDER BY openned_businesses DESC
+LIMIT 6
+
+
+
++-------+------------+--------------------+
+| state | city       | openned_businesses |
++-------+------------+--------------------+
+| NV    | Las Vegas  |               1311 |
+| AZ    | Phoenix    |                849 |
+| ON    | Toronto    |                788 |
+| AZ    | Scottsdale |                417 |
+| NC    | Charlotte  |                398 |
+| PA    | Pittsburgh |                295 |
++-------+------------+--------------------+
+
+-Close Businesses
+
+
+
+SELECT
+    state,    
+    city,
+    COUNT(is_open) AS closed_businesses
+FROM business
+WHERE is_open = 0
+GROUP BY  city
+ORDER BY closed_businesses DESC
+LIMIT 6
+
+
+
++-------+------------+-------------------+
+| state | city       | closed_businesses |
++-------+------------+-------------------+
+| NV    | Las Vegas  |               250 |
+| ON    | Toronto    |               197 |
+| AZ    | Phoenix    |               152 |
+| AZ    | Scottsdale |                80 |
+| NC    | Charlotte  |                70 |
+| PA    | Pittsburgh |                58 |
++-------+------------+-------------------+
+
+
+
+So, the closing rates for these cities are 
+Las Vegas, NV: 16.03%
+Phoenix, AZ: 15.20%
+Toronto, ON: 20.00%
+Scottsdale, AZ: 16.08%
+Charlotte, NC: 14.95%
+Pittsburgh, PA: 16.33%
+
+
+AS we see toronto seems to have a higher closing rate so we will exlude it from our search.
+
+
+-------------------------------------------
+
+
+In our next step, we will check the percentage of businesses related to food in these cities. We will begin with the city of Las Vegas.
+
+
+
+SELECT
+    SUM(CASE
+        WHEN cat.category LIKE '%Food%' THEN 1
+        WHEN cat.category LIKE '%Restaurants%' THEN 1
+        WHEN cat.category LIKE '%Pizza%' THEN 1
+        WHEN cat.category LIKE '%Pasta%' THEN 1
+        WHEN cat.category LIKE '%French%' THEN 1
+        WHEN cat.category LIKE '%Greek%' THEN 1
+        WHEN cat.category LIKE '%Turkish%' THEN 1
+        WHEN cat.category LIKE '%Sushi%' THEN 1
+        WHEN cat.category LIKE '%Italian%' THEN 1
+        WHEN cat.category LIKE '%Cuisine%' THEN 1
+        WHEN cat.category LIKE '%Kebap%' THEN 1
+        WHEN cat.category LIKE '%Fish%' THEN 1
+        WHEN cat.category LIKE '%Burger' THEN 1
+        ELSE 0
+    END) AS food_related_business,
+    SUM(CASE
+        WHEN cat.category NOT LIKE '%Food%'
+        AND cat.category NOT LIKE '%Restaurants%'
+        AND cat.category NOT LIKE '%Pizza%'
+        AND cat.category NOT LIKE '%Pasta%'
+        AND cat.category NOT LIKE '%French%'
+        AND cat.category NOT LIKE '%Greek%'
+        AND cat.category NOT LIKE '%Turkish%'
+        AND cat.category NOT LIKE '%Sushi%'
+        AND cat.category NOT LIKE '%Italian%'
+        AND cat.category NOT LIKE '%Cuisine%'
+        AND cat.category NOT LIKE '%Kebap%'
+        AND cat.category NOT LIKE '%Fish%'
+        AND cat.category NOT LIKE '%Burger' THEN 1
+        ELSE 0
+    END) AS other_business,
+    bu.city
+FROM business bu
+JOIN category cat
+ON bu.id = cat.business_id
+WHERE bu.city = 'Las Vegas';
+
+
+
+
+
++-----------------------+----------------+-----------+
+| food_related_business | other_business | city      |
++-----------------------+----------------+-----------+
+|                     8 |             70 | Las Vegas |
++-----------------------+----------------+-----------+
+
+
+Using a similar approach, we will calculate the data for our other cities of interest.
+
+
+
++-----------------------+----------------+---------+
+| food_related_business | other_business | city    |
++-----------------------+----------------+---------+
+|                    14 |             59 | Phoenix |
++-----------------------+----------------+---------+
+
+-------------------------------------------
+
++-----------------------+----------------+------------+
+| food_related_business | other_business | city       |
++-----------------------+----------------+------------+
+|                     3 |             27 | Scottsdale |
++-----------------------+----------------+------------+
+
+-------------------------------------------
+
++-----------------------+----------------+-----------+
+| food_related_business | other_business | city      |
++-----------------------+----------------+-----------+
+|                     4 |             37 | Charlotte |
++-----------------------+----------------+-----------+
+
+-------------------------------------------
+
++-----------------------+----------------+------------+
+| food_related_business | other_business | city       |
++-----------------------+----------------+------------+
+|                     4 |             13 | Pittsburgh |
++-----------------------+----------------+------------+
+
+
+
+Based on the data, it becomes evident that Phoenix and Pittsburgh are more saturated with food-related industries, surpassing the national average. This suggests a highly competitive market, which may lead us to exclude them from our current considerations. Instead, we will focus on the other three cities, where there appears to be more potential for newcomers to thrive.
+
+
+-------------------------------------------
+
+
+
+
+So, we will need to investigate further regarding the reviews. 
+
+
+SELECT
+        CASE
+            WHEN cat.category LIKE '%Food%' THEN 1
+            WHEN cat.category LIKE '%Restaurants%' THEN 1
+            WHEN cat.category LIKE '%Pizza%' THEN 1
+            WHEN cat.category LIKE '%Pasta%' THEN 1
+            WHEN cat.category LIKE '%French%' THEN 1
+            WHEN cat.category LIKE '%Greek%' THEN 1
+            WHEN cat.category LIKE '%Turkish%' THEN 1
+            WHEN cat.category LIKE '%Sushi%' THEN 1
+            WHEN cat.category LIKE '%Italian%' THEN 1
+            WHEN cat.category LIKE '%Cuisine%' THEN 1
+            WHEN cat.category LIKE '%Kebap%' THEN 1
+            WHEN cat.category LIKE '%Fish%' THEN 1
+            WHEN cat.category LIKE '%Burger' THEN 1
+            ELSE 0
+        END AS food_related_business,
+        bu.city,
+        ROUND(AVG(bu.stars), 2) AS avg_stars,
+        ROUND(AVG(bu.review_count), 2) AS avg_review_count
+    FROM business bu
+    JOIN category cat
+    ON bu.id = cat.business_id
+    WHERE bu.city = 'Las Vegas'
+    GROUP BY food_related_business, bu.city 
+
+
+
++-----------------------+-----------+-----------+------------------+
+| food_related_business | city      | avg_stars | avg_review_count |
++-----------------------+-----------+-----------+------------------+
+|                     0 | Las Vegas |      4.06 |            99.59 |
+|                     1 | Las Vegas |      3.75 |            162.0 |
++-----------------------+-----------+-----------+------------------+
+
+
+For the city of Las Vegas, in terms of both review quality and quantity, the average review rating stands at 3.75 stars, with an average review count of 162.
+
+
+Using a similar approach, we will calculate the data for our other cities of interest.
+
+
+For Scottsdale 
+
++-----------------------+------------+-----------+------------------+
+| food_related_business | city       | avg_stars | avg_review_count |
++-----------------------+------------+-----------+------------------+
+|                     0 | Scottsdale |       4.0 |            91.63 |
+|                     1 | Scottsdale |       4.0 |             91.0 |
++-----------------------+------------+-----------+------------------+
+
+-------------------------------------------
+
+For  Charlotte
+
++-----------------------+-----------+-----------+------------------+
+| food_related_business | city      | avg_stars | avg_review_count |
++-----------------------+-----------+-----------+------------------+
+|                     0 | Charlotte |      4.19 |             8.05 |
+|                     1 | Charlotte |      4.25 |              5.5 |
++-----------------------+-----------+-----------+------------------+
+
+
+As we analyze the data, we find that the average star rating in Las Vegas is slightly lower at 3.75 stars, suggesting that businesses in this city face more discerning customers. However, this also presents an opportunity for improvement, indicating room for enhancing service quality. In terms of quantity, the average review count is nearly double the business average, signifying a high level of engagement with these food-related businesses, although it may require more rigorous efforts.
+
+In contrast, the other two markets exhibit a similar average star rating, with minimal variation among their business categories. Additionally, the review count in these cities is notably lower compared to Las Vegas, but it aligns closely with the standard businesses.
+
+Considering this data, Las Vegas emerges as a promising market. It not only offers room for enhancement but also showcases a high level of interaction with customers, as indicated by the substantial review count.
+
+
+
+
+
+
